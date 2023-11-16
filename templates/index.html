@@ -1,0 +1,95 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <style>
+      table.dataframe {
+        border-collapse: collapse;
+        border: 1px solid black;
+        margin: 10px 0;
+        font-size: 0.9em;
+        font-family: Arial, sans-serif;
+      }
+      table.dataframe th,
+      table.dataframe td {
+        border: 1px solid black;
+        padding: 6px;
+        cursor: pointer;
+      }
+      td.editable {
+        background-color: #ffffe0; /* Цвет фона при редактировании */
+      }
+    </style>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var cells = document.querySelectorAll("td");
+        var changes = {};
+
+        let arr = [];
+
+        cells.forEach(function (cell) {
+          cell.addEventListener("click", function () {
+            editCell(cell);
+          });
+        });
+
+        function editCell(cell) {
+          console.log("edit");
+          var originalContent = cell.innerText;
+          cell.classList.add("editing");
+          cell.innerHTML =
+            '<input type="text" value="' + originalContent + '" />';
+          var input = cell.querySelector("input");
+          input.focus();
+
+          input.addEventListener("blur", function () {
+            var newContent = input.value;
+            cell.classList.remove("editing");
+
+            // Accumulate changes on the client
+            var row = cell.parentNode.rowIndex - 1;
+            var col = cell.cellIndex;
+            changes[[row, col]] = newContent;
+
+            newValue = {
+              row: row,
+              col: col,
+              newContent: newContent,
+            };
+            // тут с массивом поработай чувак
+            arr.push(newValue);
+            console.log(arr);
+            console.log("in edit: ");
+            // console.log(changes);
+          });
+        }
+
+        // Обработка кнопки "Сохранить"
+        var saveButton = document.getElementById("saveButton");
+        saveButton.addEventListener("click", function () {
+          // Send accumulated changes to the server for saving
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/save_changes", true);
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              console.log("Changes saved successfully");
+            }
+          };
+          xhr.send(JSON.stringify({ newValue: newValue }));
+          console.log("in save: ");
+          console.log(newValue);
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>{{ title }}</h1>
+    {{ table|safe }}
+    <button id="saveButton">Сохранить</button>
+  </body>
+</html>
