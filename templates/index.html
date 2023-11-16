@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -6,29 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ title }}</title>
     <style>
+      table {
+        border: none;
+        box-shadow: 1px 2px 3px 2px rgba(0, 0, 0, 0.4);
+      }
       table.dataframe {
         border-collapse: collapse;
-        border: 1px solid black;
+        /* border: 1px solid black; */
         margin: 10px 0;
         font-size: 0.9em;
         font-family: Arial, sans-serif;
+        width: 100%; /* Ширина таблицы по размеру контейнера */
       }
+
       table.dataframe th,
       table.dataframe td {
-        border: 1px solid black;
-        padding: 6px;
-        cursor: pointer;
+        /* border: 1px solid black; */
+        padding: 8px; /* Увеличиваем отступ в ячейках для лучшего визуального отображения */
+        text-align: left; /* Выравнивание текста по левому краю */
       }
-      td.editable {
-        background-color: #ffffe0; /* Цвет фона при редактировании */
+
+      /* td.editable {
+        background-color: #ffffe0;
+      } */
+      .data tr:nth-child(odd) {
+        background-color: #d8d8d8;
       }
+      .inputStyle {
+        width: 100%;
+        border: none;
+        background: none;
+      }
+      .inputStyle:focus {
+        background-color: rgba(255, 204, 0, 0.27);
+      }
+      .data tr:hover {
+        background-color: rgba(71, 129, 255, 0.2);
+      }
+
+      /* Добавьте дополнительные стили, если необходимо */
     </style>
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        var cells = document.querySelectorAll("td");
-        var changes = {};
-
+        let cells = document.querySelectorAll("td");
+        let changes = {};
         let arr = [];
 
         cells.forEach(function (cell) {
@@ -37,42 +58,39 @@
           });
         });
 
+        // функция добавления возможости редактирования ячеек таблицы
         function editCell(cell) {
-          console.log("edit");
-          var originalContent = cell.innerText;
+          let originalContent = cell.innerText;
           cell.classList.add("editing");
           cell.innerHTML =
-            '<input type="text" value="' + originalContent + '" />';
-          var input = cell.querySelector("input");
+            '<input type="text" class="inputStyle" value="' +
+            originalContent +
+            '" />';
+          let input = cell.querySelector("input");
           input.focus();
 
           input.addEventListener("blur", function () {
-            var newContent = input.value;
+            let newContent = input.value;
             cell.classList.remove("editing");
-
-            // Accumulate changes on the client
-            var row = cell.parentNode.rowIndex - 1;
-            var col = cell.cellIndex;
+            let row = cell.parentNode.rowIndex - 1;
+            let col = cell.cellIndex;
             changes[[row, col]] = newContent;
-
             newValue = {
               row: row,
               col: col,
               newContent: newContent,
             };
-            // тут с массивом поработай чувак
             arr.push(newValue);
             console.log(arr);
             console.log("in edit: ");
-            // console.log(changes);
+            newValue = {};
           });
         }
 
         // Обработка кнопки "Сохранить"
-        var saveButton = document.getElementById("saveButton");
+        let saveButton = document.getElementById("saveButton");
         saveButton.addEventListener("click", function () {
-          // Send accumulated changes to the server for saving
-          var xhr = new XMLHttpRequest();
+          let xhr = new XMLHttpRequest();
           xhr.open("POST", "/save_changes", true);
           xhr.setRequestHeader("Content-Type", "application/json");
           xhr.onreadystatechange = function () {
@@ -80,9 +98,49 @@
               console.log("Changes saved successfully");
             }
           };
-          xhr.send(JSON.stringify({ newValue: newValue }));
+          xhr.send(JSON.stringify({ arr }));
           console.log("in save: ");
-          console.log(newValue);
+          console.log(arr);
+        });
+
+        // Обработка события "Открыть предыдущую версию"
+        let btnOpenPrevPlanner = document.getElementById("openPrevPlanner");
+        btnOpenPrevPlanner.addEventListener("click", function (event) {
+          event.preventDefault();
+          let xhr = new XMLHttpRequest();
+          xhr.open("GET", "/prev_planner", true);
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              window.location.href = "/prev_planner";
+              console.log("Changes saved successfully");
+            }
+          };
+          xhr.send();
+        });
+
+        // Обработка события "Открыть нынешнюю версию"
+        let btnOpenMainPlanner = document.getElementById("openMainPlanner");
+        btnOpenMainPlanner.addEventListener("click", function (event) {
+          event.preventDefault();
+          window.location.href = "/";
+        });
+
+        //Обработка события "Откатить предудыщую версию"
+        let btnRollbackPrevPlanner = document.getElementById(
+          "rollbackPrevPlanner"
+        );
+        btnRollbackPrevPlanner.addEventListener("click", function () {
+          let xhr = new XMLHttpRequest();
+          xhr.open("POST", "/rollback_planner", true);
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              console.log("Changes saved successfully");
+            }
+          };
+
+          xhr.send();
         });
       });
     </script>
@@ -90,6 +148,9 @@
   <body>
     <h1>{{ title }}</h1>
     {{ table|safe }}
-    <button id="saveButton">Сохранить</button>
+    <button id="saveButton">Сохранить нынешнюю версию</button>
+    <button id="openMainPlanner">Открыть нынешнюю версию</button>
+    <button id="openPrevPlanner">Открыть предыдущюю версию</button>
+    <button id="rollbackPrevPlanner">Откатить предыдущую версию</button>
   </body>
 </html>
