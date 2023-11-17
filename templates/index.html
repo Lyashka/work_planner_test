@@ -10,19 +10,19 @@
         box-shadow: 1px 2px 3px 2px rgba(0, 0, 0, 0.4);
       }
       table.dataframe {
+        text-align: center;
         border-collapse: collapse;
         /* border: 1px solid black; */
-        margin: 10px 0;
-        font-size: 0.9em;
+        margin: 10px 0 30px 0;
+        font-size: 1em;
         font-family: Arial, sans-serif;
         width: 100%; /* Ширина таблицы по размеру контейнера */
       }
 
       table.dataframe th,
       table.dataframe td {
-        /* border: 1px solid black; */
-        padding: 8px; /* Увеличиваем отступ в ячейках для лучшего визуального отображения */
-        text-align: left; /* Выравнивание текста по левому краю */
+        text-align: center; /* Выравнивание текста по левому краю */
+        height: 30px;
       }
 
       /* td.editable {
@@ -32,18 +32,32 @@
         background-color: #d8d8d8;
       }
       .inputStyle {
+        font-size: 1em;
+        text-align: center;
+        height: 100%;
         width: 100%;
         border: none;
         background: none;
+        box-sizing: border-box;
       }
       .inputStyle:focus {
+        text-align: center;
+        border: none;
         background-color: rgba(255, 204, 0, 0.27);
       }
       .data tr:hover {
         background-color: rgba(71, 129, 255, 0.2);
       }
-
-      /* Добавьте дополнительные стили, если необходимо */
+      .btnEvent {
+        background: none;
+        border: none;
+        font-size: 20px;
+        border: 1px solid black;
+        margin-right: 10px;
+      }
+      .btnEvent:hover {
+        background-color: rgba(71, 129, 255, 0.2);
+      }
     </style>
 
     <script>
@@ -53,15 +67,16 @@
         let arr = [];
 
         cells.forEach(function (cell) {
-          cell.addEventListener("click", function () {
-            editCell(cell);
+          cell.addEventListener("dblclick", function () {
+            if (!cell.classList.contains("editing")) {
+              editCell(cell);
+            }
           });
         });
 
-        // функция добавления возможости редактирования ячеек таблицы
         function editCell(cell) {
-          let originalContent = cell.innerText;
           cell.classList.add("editing");
+          let originalContent = cell.innerText;
           cell.innerHTML =
             '<input type="text" class="inputStyle" value="' +
             originalContent +
@@ -148,9 +163,15 @@
   <body>
     <h1>{{ title }}</h1>
     {{ table|safe }}
-    <button id="saveButton">Сохранить нынешнюю версию</button>
-    <button id="openMainPlanner">Открыть нынешнюю версию</button>
-    <button id="openPrevPlanner">Открыть предыдущюю версию</button>
-    <button id="rollbackPrevPlanner">Откатить предыдущую версию</button>
+    <button class="btnEvent" id="saveButton">Сохранить нынешнюю версию</button>
+    <button class="btnEvent" id="openMainPlanner">
+      Открыть нынешнюю версию
+    </button>
+    <button class="btnEvent" id="openPrevPlanner">
+      Открыть предыдущюю версию
+    </button>
+    <button class="btnEvent" id="rollbackPrevPlanner">
+      Откатить предыдущую версию
+    </button>
   </body>
 </html>

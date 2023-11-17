@@ -9,6 +9,7 @@ changes = {}
 
 df.index = df.index + 1
 
+
 @app.route('/')
 def display_table():
     
@@ -71,6 +72,7 @@ def rollback_planner():
 
     excel_file_path = './data/planner.xlsx'
     df.to_excel(excel_file_path, index=False)
+    df.index = prev_df.index
     return render_template('index.html', table=df.to_html(classes='data'), title='Предыдущая таблица')
 
 
